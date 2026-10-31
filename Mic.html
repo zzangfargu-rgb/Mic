@@ -1,5 +1,11 @@
 <!--
-버전: 2026-10-29,1800
+버전: 2026-10-31,1000
+변경사유: [v5.5 Phase B-2 수정] 앱의 🎤 버튼에서 바로 발음 점검 + 설정 재입력 제거.
+  1) [바로 시작] 앱에서 열면 주소의 w(단어)·i(항목)·go(자동 시작)를 받아 그 단어 하나만 크게 보여주고(목록·설정 숨김) 곧바로 마이크 시작. [다른 단어 고르기]로 전체 화면 전환 가능.
+  2) [토큰 오류 E002] 주소 없이 직접 열어 '접근 토큰이 맞지 않습니다'가 나던 문제 — 웹앱 주소·접근 토큰 입력칸을 함께 표시, 한 번 저장하면 이 기기에 기억(다시 입력 불필요).
+  (서버 파일 Code·Diag·00_RUN 은 변경 없음 → APP_VERSION 은 2026-10-29,1800 유지)
+[실행 안내] 편집기 실행: 불필요 (GitHub Pages 의 Mic 저장소에 올리는 정적 페이지).
+[이전 버전] 2026-10-29,1800
 변경사유: [v5.5 Phase B-2 수정] 진단 요약(2026-10-29 17:47) 분석 반영 — 버전 문자열만 갱신.
 [이전 버전] 2026-10-29,1500
 변경사유: [v5.5 Phase B-2] 프로젝트 지침 v5.5 반영 — 발음 점검 기능·화면은 그대로.
@@ -44,6 +50,8 @@ header{background:var(--ink);color:#fff;padding:calc(12px + env(safe-area-inset-
 header h1{margin:0;font:700 21px var(--serif)}
 header small{opacity:.8}
 main{max-width:980px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom));display:grid;gap:14px}
+body.focus #left{display:none}body.focus main{grid-template-columns:1fr!important}
+#focusBar[hidden]{display:none!important}
 @media (min-width:900px){main{grid-template-columns:360px minmax(0,1fr);align-items:start;padding-top:24px}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
 .panel h2{margin:0 0 10px;font:700 17px var(--serif)}
@@ -81,11 +89,11 @@ main{max-width:980px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-i
 </style>
 </head>
 <body>
-<header><h1>한베영 단어장 · 발음 점검</h1><small>마이크가 막히는 환경을 위한 전용 페이지예요</small></header>
+<header><h1>한베영 단어장 · 발음 점검</h1><small>마이크가 막히는 환경을 위한 전용 페이지예요</small><div id="focusBar" hidden style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="fbAll">다른 단어 고르기</button><button class="btn" id="fbClose">이 창 닫기</button></div></header>
 <main>
   <section class="panel" id="left">
     <h2>설정</h2>
-    <div class="field" id="apiBox" hidden><label for="api">웹앱 주소 (/exec 로 끝나는 링크)</label><input class="input" id="api" placeholder="https://script.google.com/macros/s/…/exec" inputmode="url"><button class="btn primary" id="apiSave" style="margin-top:8px">저장하고 불러오기</button></div>
+    <div class="field" id="apiBox" hidden><label for="api">웹앱 주소 (/exec 로 끝나는 링크)</label><input class="input" id="api" placeholder="https://script.google.com/macros/s/…/exec" inputmode="url"><label for="tok" style="margin-top:8px;display:block">접근 토큰 (스크립트 속성 MIC_TOKEN 값 — 한 번만 입력하면 기억해요)</label><input class="input" id="tok" type="password" autocomplete="off" placeholder="접근 토큰"><button class="btn primary" id="apiSave" style="margin-top:8px">저장하고 불러오기</button></div>
     <div class="field"><label for="user">누가 연습하나요?</label><select class="input" id="user"></select></div>
     <div class="field"><label for="mode">연습 대상</label><select class="input" id="mode"><option value="word">단어만</option><option value="example">예문만</option><option value="both">단어 + 예문</option></select></div>
     <div class="field" id="styleWrap" hidden><label for="style">예문 문체</label><select class="input" id="style"><option value="all">구어체 + 문어체</option><option value="spoken">구어체(말할 때)</option><option value="written">문어체(글·격식)</option></select></div>
@@ -518,9 +526,11 @@ const IC_SPK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 const IC_STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
 
 try { Voice.setGender(({'아빠':'male','아들':'male','엄마':'female','딸':'female'})[(new URLSearchParams(location.search)).get('u') || localStorage.getItem('hby_user')] || ''); } catch (e) { /* noop */ }
+const FOCUS = params.get('w') ? { key: params.get('w'), item: params.get('i') || 'word', go: params.get('go') === '1' } : null;
 const S = { data: null, user: params.get('u') || lsGet('hby_user') || '아빠', sector: '전체', q: '', cur: null, pron: null, ctl: null,
   mode: ['word', 'example', 'both'].indexOf(lsGet('hby_micmode')) !== -1 ? lsGet('hby_micmode') : 'both',
   style: ['all', 'spoken', 'written'].indexOf(lsGet('hby_micstyle')) !== -1 ? lsGet('hby_micstyle') : 'all', item: 'word' };
+if (FOCUS) { S.mode = 'both'; S.style = 'all'; S.item = FOCUS.item; }
 
 function visible() {
   const c = S.data.commonOwner;
@@ -576,6 +586,7 @@ async function load() {
     $('#apiBox').hidden = true;
     $('#status').textContent = '';
     fill();
+    applyFocus();
   } catch (e) {
     $('#apiBox').hidden = false;
     const m = String(e && e.message || e);
@@ -586,6 +597,15 @@ async function load() {
     dlog('E001', 'load', m);
     $('#status').innerHTML = '불러오지 못했어요: ' + esc(m) + '<br>' + tip;
   }
+}
+let focusDone = false;
+function applyFocus() {
+  if (!FOCUS || focusDone) return; focusDone = true;
+  const w = visible().find(x => keyOf(x) === FOCUS.key);
+  if (!w) { $('#status').textContent = '선택한 단어를 찾지 못해 전체 목록을 보여드려요.'; return; }
+  S.cur = w; document.body.classList.add('focus'); $('#focusBar').hidden = false;
+  renderList(); stage();
+  if (FOCUS.go) { try { start(); } catch (e) { dlog('E013', 'autoStart', e && e.message); } }
 }
 function fill() {
   const d = S.data;
@@ -701,7 +721,10 @@ $('#dgDl').addEventListener('click', () => {
   } catch (e) { $('#status').textContent = '다운로드가 막혔어요. [로그 복사]를 이용해주세요.'; }
 });
 $('#dgClr').addEventListener('click', () => { DLOG.length = 0; $('#dgN').textContent = ''; $('#dgOut').textContent = dtext(); });
-$('#apiSave').addEventListener('click', () => { API = $('#api').value.trim(); lsSet('hby_api', API); load(); });
+$('#apiSave').addEventListener('click', () => { API = $('#api').value.trim() || API; const tk = $('#tok').value.trim(); if (tk) { TOKEN = tk; lsSet('hby_mk', TOKEN); } lsSet('hby_api', API); load(); });
+$('#api').value = API || '';
+$('#fbAll').addEventListener('click', () => { document.body.classList.remove('focus'); $('#focusBar').hidden = true; });
+$('#fbClose').addEventListener('click', () => { try { window.close(); } catch (e) { /* noop */ } $('#status').textContent = '창이 닫히지 않으면 브라우저에서 이 탭을 직접 닫아주세요.'; });
 load();
 })();
 </script>
