@@ -1,34 +1,21 @@
 <!--
-버전: 2026-10-31,1000
+버전: 2026-10-31,1100
+변경사유: [v5.5 Phase B-2 수정] 발음 점검 전용 페이지 개선 5건(안C 선택).
+  1) [설정 화면 빨리 숨김] 앱의 🎤 버튼으로 열린 경우(주소에 w 포함) 페이지가 열리자마자 설정·목록을 숨기고 단어 화면만 표시.
+     단어 목록은 서버 응답을 기다리지 않고 직전에 받은 목록(이 기기에 캐시)으로 즉시 시작하고, 뒤에서 새로 갱신. 캐시가 없을 때만 불러오는 동안 기다림.
+  2) [내 발음 다시 듣기] 인식과 동시에 MediaRecorder 로 녹음 → 결과 상자의 [내 발음 듣기]. 녹음은 이 기기 메모리에만 있고 시트·서버로 보내지 않음.
+     녹음과 음성 인식을 함께 못 쓰는 기기는 자동으로 녹음을 끄고 인식만 진행(안내 표시). [내 발음 녹음해서 다시 듣기] 체크로 직접 끄고 켤 수 있음.
+  3) [채점 기준 명확화] 결과에 점수 계산 내역(성조 포함 60% + 성조 제외 40% 등), 목표/인식 글자 비교(다른 글자 빨간색 표시), 인식 후보, 등급표, [채점 기준 보기]를 표시.
+  4) [이전·다음] 단어 화면 아래에 [← 이전] [다음 →] 와 위치(n / 전체) 표시, 키보드 ← → 지원. 이동하면 마이크는 자동으로 켜지지 않고 🎤 를 직접 누름(선택 ②).
+  5) [3개 언어 표시] 단어 카드에 베트남어·한국어·영어를 모두 표시(점검 대상 언어는 크게 + 🎯 표시). 예문 점검 때도 단어의 3개 언어를 작게 함께 표시. 목록에도 나머지 두 언어 표시.
+  공용 모듈(Pron): 채점 상세(detail)·글자 비교(diff)·녹음 옵션(record/onAudio)을 추가. 기존 호출 방식은 그대로라 Index.html 은 변경하지 않음.
+  (서버 파일 Code·Diag·00_RUN 도 변경 없음 → APP_VERSION 은 2026-10-29,1800 유지, 새 배포 불필요)
+[실행 안내] 편집기 실행: 불필요 (GitHub Pages 의 Mic 저장소에 index.html 로 올리는 정적 페이지 — 파일 이름은 index.html 로 바꿔서 덮어쓰기).
+[이전 버전] 2026-10-31,1000
 변경사유: [v5.5 Phase B-2 수정] 앱의 🎤 버튼에서 바로 발음 점검 + 설정 재입력 제거.
   1) [바로 시작] 앱에서 열면 주소의 w(단어)·i(항목)·go(자동 시작)를 받아 그 단어 하나만 크게 보여주고(목록·설정 숨김) 곧바로 마이크 시작. [다른 단어 고르기]로 전체 화면 전환 가능.
   2) [토큰 오류 E002] 주소 없이 직접 열어 '접근 토큰이 맞지 않습니다'가 나던 문제 — 웹앱 주소·접근 토큰 입력칸을 함께 표시, 한 번 저장하면 이 기기에 기억(다시 입력 불필요).
-  (서버 파일 Code·Diag·00_RUN 은 변경 없음 → APP_VERSION 은 2026-10-29,1800 유지)
-[실행 안내] 편집기 실행: 불필요 (GitHub Pages 의 Mic 저장소에 올리는 정적 페이지).
-[이전 버전] 2026-10-29,1800
-변경사유: [v5.5 Phase B-2 수정] 진단 요약(2026-10-29 17:47) 분석 반영 — 버전 문자열만 갱신.
-[이전 버전] 2026-10-29,1500
-변경사유: [v5.5 Phase B-2] 프로젝트 지침 v5.5 반영 — 발음 점검 기능·화면은 그대로.
-  1) [HC-19] 진단 강화: 최근 30개 사용자 행동(클릭·입력 길이) breadcrumbs → 오류 로그에 '재현 단계' 자동 첨부, 서버 오류 응답의 runId·에러코드 연결, 서버 호출(단어 불러오기·점수 저장) 이력, 서버 버전 표시.
-  2) 앱 버전 표기 갱신(진단 리포트가 이 파일의 버전을 하드코딩하지 않고 APP_VERSION 상수를 사용).
-[실행 안내] 편집기 실행: 불필요 (GitHub Pages 등에 올리는 발음 점검 전용 페이지 — 웹앱 Code.gs 와 별개로 주소만 연결).
-[이전 버전] 2026-10-25,0925
-변경사유: [v5.3 Phase B-2] [F-15] 성조 제거 정규식을 \u0300-\u036f 로 명시(결합 문자 직접 사용 제거). 진단 패널 앱 버전 표기 갱신. 그 외 동작 변경 없음.
-[이전 버전] 2026-10-22,1804
-변경사유: [v5.3 Phase B-2, 안C] 코드 전수조사 반영 (화면 구성·기능은 그대로).
-  1) [F-04] 선택한 단어를 현재 사용자에게 보이는 단어(visible)에서만 찾도록 수정(소유자별 같은 vi|ko 단어 혼동 방지).
-  2) [F-06] aria-current 가 선택 없음일 때 "null" 문자열이 되던 문제 수정(true/false 로 고정).
-  3) [F-14·HC-19] 🛠 진단 패널 추가: 오류·불러오기 실패·저장 실패를 자동 수집 → [로그 복사] [TXT 다운로드] [로그 지우기]. 접근 토큰·주소 비밀 값은 마스킹.
-[이전 버전] 2026-10-18,1135
-변경사유: [v5.4 Phase B-2] 발음 점검 페이지 연결 오류 수정 + 연습 대상 선택.
-  1) 앱의 [발음 점검 전용 페이지] 버튼 링크(api·u·m·t·s·k)를 자동 인식: 웹앱 주소와 현재 사용자가 자동으로 채워짐. 주소는 이 기기에 저장되어 다음부터는 그냥 열어도 됨.
-  2) "Failed to fetch" 대응: 원인(웹앱 액세스가 '모든 사용자(익명)'가 아님 / 주소 오류 / 토큰 불일치)을 구분해 안내.
-  3) 연습 대상 선택: 단어만 / 예문만 / 단어+예문, 예문 문체(구어체·문어체·둘 다). 예문 점수는 시트에 저장하지 않음(단어 점수만 저장).
-  4) 링크 소지자 접근: 앱이 링크에 실어 보내는 접근 토큰(k)을 저장 후 주소창에서 지우고, 서버 요청에 함께 보냄.
-[이전 변경] [v5.3.1] Voice 모듈 동기화(브라우저 voice.gender 우선 사용). 음성 개선(Voice 모듈 Index.html과 동일): 미국식 영어(en-US) 고정, 성별별 음성 선택, 자연스러운 한국어, 베트남어 느린 속도. 발음 점검 듣기 속도를 언어별로 조정.
-[이전 변경] [신규] 발음 점검 전용 페이지. 구글 앱스스크립트 화면(삽입 프레임)에서는 브라우저가 마이크를 막는 경우가 있어,
-  일반 웹페이지(GitHub Pages 등)에서 열어 음성 인식을 안정적으로 쓰기 위한 독립 실행 파일.
-  Apps Script 웹앱(/exec)에서 단어를 불러오고(GET ?action=words), 점수는 같은 시트에 저장(POST pronounce_history).
+[이전 버전] 2026-10-29,1800 / 2026-10-29,1500 / 2026-10-25,0925 / 2026-10-22,1804 / 2026-10-18,1135 — 진단 강화(HC-19), 서버 버전 표시, 정규식 명시, 선택 단어 visible 기준, 진단 패널, 링크 자동 연결·토큰, 연습 대상 선택 등.
 -->
 <!DOCTYPE html>
 <html lang="ko">
@@ -78,6 +65,7 @@ body.focus #left{display:none}body.focus main{grid-template-columns:1fr!importan
 .target{font:700 clamp(36px,9vw,64px)/1.1 var(--serif);overflow-wrap:anywhere}
 .target.sm{font-size:clamp(22px,5vw,34px);line-height:1.3}
 .big{font:700 64px/1 var(--serif);margin:10px 0}
+.big small{font-size:22px;margin-left:4px;font-weight:600}
 .good{color:var(--ok)}.mid{color:var(--gold)}.low{color:var(--bad)}
 .err{text-align:left;background:var(--surface2);border-radius:14px;padding:12px;margin-top:12px}
 .err b{color:var(--bad)}
@@ -86,6 +74,35 @@ body.focus #left{display:none}body.focus main{grid-template-columns:1fr!importan
 .pulse{animation:p 1.2s ease-in-out infinite}
 @keyframes p{50%{box-shadow:0 0 0 10px rgba(179,38,30,.2)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+/* ---- 3개 언어 단어 카드 ---- */
+.wtri{display:grid;gap:8px;margin:6px 0 4px;text-align:left}
+.wrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
+.wrow .lg{flex:none;min-width:3.8em;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.wrow .tx{font:700 clamp(20px,5vw,28px)/1.25 var(--serif);overflow-wrap:anywhere}
+.wrow.on{border:2px solid var(--lotus);background:color-mix(in srgb,var(--lotus) 8%,var(--surface))}
+.wrow.on .tx{font-size:clamp(32px,9vw,56px);line-height:1.1}
+.wrow .tg{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--lotus)}
+/* ---- 이전/다음 ---- */
+.navbar{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:5;display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:18px;padding:8px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:0 4px 14px rgba(20,35,58,.14)}
+.navbar .btn{min-height:52px}
+/* ---- 결과·채점 기준 ---- */
+.rectog{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 8px;font-size:14px;color:var(--ink2)}
+.rectog input{width:18px;height:18px;accent-color:var(--lotus)}
+.res{margin-top:6px}
+.cmp{display:grid;gap:6px;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0 6px}
+.cmp>div{display:flex;gap:10px;align-items:baseline}
+.cmp .k{flex:none;width:2.6em;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.cmp .v{font:600 18px/1.4 var(--serif);overflow-wrap:anywhere}
+.x{color:var(--bad);background:color-mix(in srgb,var(--bad) 16%,transparent);border-radius:3px;text-decoration:underline}
+.why{margin:6px 0 0;font-size:14.5px;text-align:left}
+details.crit{margin-top:14px;text-align:left;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
+details.crit summary{cursor:pointer;padding:12px 14px;font-weight:700;min-height:44px}
+details.crit .cb{padding:0 14px 12px;font-size:14.5px}
+details.crit ul{margin:6px 0;padding-left:20px}
+table.gtab{border-collapse:collapse;margin:6px 0}
+.gtab td{border:1px solid var(--line);padding:4px 12px;font-size:14px}
+.gtab td:first-child{font-weight:700}
 </style>
 </head>
 <body>
@@ -342,10 +359,12 @@ const Pron = (function () {
     return r;
   }
 
-  async function checkMic() {
+  /** keep=true 이면 마이크 스트림을 닫지 않고 돌려줌(녹음용). 기본은 권한만 확인하고 바로 닫음 */
+  async function checkMic(keep) {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return { ok: true, skipped: true };
     try {
       const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (keep) return { ok: true, stream: st };
       try { st.getTracks().forEach(t => t.stop()); } catch (e) { /* noop */ }
       return { ok: true };
     } catch (e) {
@@ -379,53 +398,113 @@ const Pron = (function () {
     if (!a || !b) return 0;
     return 1 - lev(a, b) / Math.max(a.length, b.length);
   }
-  function scoreOne(target, heard, lang) {
-    const t = clean(target), h = clean(heard);
-    if (!t || !h) return 0;
+  /** 한 후보 문장의 채점 내역. 베트남어: 성조 포함 60% + 성조 제외 40% / 한국어: 띄어쓰기 무시 / 영어: 그대로 */
+  function detailOne(target, heard, lang) {
+    const t0 = clean(target), h0 = clean(heard);
     const l = String(lang || '').toLowerCase();
-    if (l.indexOf('vi') === 0) {
-      const full = sim(t, h);
-      const bare = sim(stripTone(t), stripTone(h));
-      return 0.6 * full + 0.4 * bare;
+    const kind = l.indexOf('vi') === 0 ? 'vi' : (l.indexOf('ko') === 0 ? 'ko' : 'en');
+    let t = t0, h = h0;
+    if (kind === 'ko') { t = t0.replace(/ /g, ''); h = h0.replace(/ /g, ''); }
+    if (!t || !h) return { s: 0, kind: kind, t: t, h: h, full: 0, bare: 0 };
+    if (kind === 'vi') {
+      const full = sim(t, h), bare = sim(stripTone(t), stripTone(h));
+      return { s: 0.6 * full + 0.4 * bare, kind: kind, t: t, h: h, full: full, bare: bare };
     }
-    if (l.indexOf('ko') === 0) return sim(t.replace(/ /g, ''), h.replace(/ /g, ''));
-    return sim(t, h);
+    const f = sim(t, h);
+    return { s: f, kind: kind, t: t, h: h, full: f, bare: f };
   }
+  function scoreOne(target, heard, lang) { return detailOne(target, heard, lang).s; }
   function score(target, alts, lang) {
-    let best = -1, heard = '';
-    (alts || []).forEach(a => { const s = scoreOne(target, a, lang); if (s > best) { best = s; heard = a; } });
-    return { score: Math.max(0, Math.round(best * 100)), heard: heard, alts: alts || [] };
+    let best = null, heard = '';
+    (alts || []).forEach(a => { const d = detailOne(target, a, lang); if (!best || d.s > best.s) { best = d; heard = a; } });
+    if (!best) best = detailOne(target, '', lang);
+    return {
+      score: Math.max(0, Math.round(best.s * 100)), heard: heard, alts: alts || [],
+      detail: { kind: best.kind, target: best.t, heardNorm: best.h, full: Math.round(best.full * 100), bare: Math.round(best.bare * 100) }
+    };
+  }
+  /** 두 문자열의 글자 비교(가장 긴 공통 부분 기준). 일치하지 않는 글자는 ok:false → 화면에서 빨간색 표시 */
+  function diff(a, b) {
+    const A = Array.from(String(a || '')), B = Array.from(String(b || ''));
+    const m = A.length, n = B.length;
+    const am = new Array(m).fill(false), bm = new Array(n).fill(false);
+    if (m * n <= 90000) {
+      const dp = [];
+      for (let i = 0; i <= m; i++) dp.push(new Uint16Array(n + 1));
+      for (let i = m - 1; i >= 0; i--) for (let j = n - 1; j >= 0; j--) dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      let i = 0, j = 0;
+      while (i < m && j < n) {
+        if (A[i] === B[j]) { am[i] = true; bm[j] = true; i++; j++; }
+        else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+        else j++;
+      }
+    }
+    return { a: A.map((c, k) => ({ c: c, ok: am[k] })), b: B.map((c, k) => ({ c: c, ok: bm[k] })) };
+  }
+
+  function pickMime() {
+    try {
+      const c = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+      for (let i = 0; i < c.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c[i])) return c[i];
+    } catch (e) { /* noop */ }
+    return '';
   }
 
   /* ---- 녹음/인식 시작 ----
-   * o: {text, lang, onState(s), onDone({score,heard,alts}), onFail(info), timeoutMs}
-   * 반환: {stop(), abort()} */
+   * o: {text, lang, record(선택: 내 발음 녹음), onState(s), onDone({score,heard,alts,detail}), onFail(info), onAudio(Blob|null), timeoutMs}
+   * 반환: {stop(), abort()}
+   * 녹음(record)은 iOS 에서는 건너뜀. onAudio(null) = 녹음을 만들지 못함(인식·채점은 정상) */
   function start(o) {
-    const ctl = { stopped: false, rec: null, stop: function () { try { if (ctl.rec) ctl.rec.stop(); } catch (e) { /* noop */ } }, abort: function () { ctl.stopped = true; try { if (ctl.rec) ctl.rec.abort(); } catch (e) { /* noop */ } } };
+    const ctl = { stopped: false, rec: null, stop: function () { try { if (ctl.rec) ctl.rec.stop(); } catch (e) { /* noop */ } }, abort: function () { ctl.stopped = true; try { if (ctl.rec) ctl.rec.abort(); } catch (e) { /* noop */ } relStream(); } };
+    let stream = null, mr = null;
+    const chunks = [];
+    const recWanted = !!o.record && !isIOS;
+    function relStream() { try { if (stream) stream.getTracks().forEach(t => t.stop()); } catch (e) { /* noop */ } stream = null; }
+    function stopRec() {
+      try { if (mr && mr.state !== 'inactive') { mr.stop(); return; } } catch (e) { /* noop */ }
+      relStream();
+    }
+    function audioOut(blob) { if (!ctl.stopped && o.onAudio) { try { o.onAudio(blob); } catch (e) { /* noop */ } } }
     (async function () {
       try { Voice.stop(); } catch (e) { /* noop */ }
       if (!SR) { o.onFail(info('unsupported')); return; }
       o.onState('requesting');
       if (!isIOS) {
-        const m = await checkMic();
-        if (ctl.stopped) return;
+        const m = await checkMic(recWanted);
+        if (ctl.stopped) { try { if (m && m.stream) m.stream.getTracks().forEach(t => t.stop()); } catch (e) { /* noop */ } return; }
         if (!m.ok) {
           const nm = m.name || '';
           o.onFail(info(nm === 'NotFoundError' || nm === 'OverconstrainedError' ? 'no-device' : (nm === 'NotReadableError' ? 'audio-capture' : 'not-allowed'), { detail: nm + ' ' + m.message }));
           return;
         }
+        if (m.stream) stream = m.stream;
+        if (recWanted) {
+          if (stream && window.MediaRecorder) {
+            try {
+              const mt = pickMime();
+              mr = mt ? new MediaRecorder(stream, { mimeType: mt }) : new MediaRecorder(stream);
+              mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+              mr.onstop = function () {
+                const type = (mr && mr.mimeType) || mt || 'audio/webm';
+                relStream();
+                audioOut(chunks.length ? new Blob(chunks, { type: type }) : null);
+              };
+              mr.start();
+            } catch (e) { mr = null; relStream(); audioOut(null); }
+          } else { relStream(); audioOut(null); }
+        }
         await sleep(220);
-        if (ctl.stopped) return;
+        if (ctl.stopped) { relStream(); return; }
       }
       let rec;
-      try { rec = new SR(); } catch (e) { o.onFail(info('unsupported', { detail: String(e) })); return; }
+      try { rec = new SR(); } catch (e) { relStream(); o.onFail(info('unsupported', { detail: String(e) })); return; }
       ctl.rec = rec;
       rec.lang = o.lang || 'ko-KR';
       rec.interimResults = true;
       rec.maxAlternatives = 5;
       rec.continuous = false;
       let finalAlts = [], interim = '', err = null, started = false, finished = false, timer = null, startTimer = null;
-      const done = function (fn) { if (finished) return; finished = true; clearTimeout(timer); clearTimeout(startTimer); if (!ctl.stopped) fn(); };
+      const done = function (fn) { if (finished) return; finished = true; clearTimeout(timer); clearTimeout(startTimer); stopRec(); if (!ctl.stopped) fn(); };
       startTimer = setTimeout(function () {
         done(function () { try { rec.abort(); } catch (e) { /* noop */ } o.onFail(info('start-timeout')); });
       }, 8000);
@@ -456,7 +535,7 @@ const Pron = (function () {
     return ctl;
   }
 
-  return { start: start, support: support, permState: permState, micPolicy: micPolicy, scoreOne: scoreOne, score: score, info: info, checkMic: checkMic };
+  return { start: start, support: support, permState: permState, micPolicy: micPolicy, scoreOne: scoreOne, score: score, diff: diff, info: info, checkMic: checkMic };
 })();
 
 </script>
@@ -501,7 +580,8 @@ function dlog(code, where, msg, runId) {
 }
 function dtext() {
   const env = ['앱 버전: ' + APP_VERSION + (SERVER_VER && SERVER_VER !== APP_VERSION ? ' (서버 ' + SERVER_VER + ' — 버전이 다르면 파일 갱신·새 배포 확인, E011)' : (SERVER_VER ? ' (서버와 일치)' : '')), '주소: ' + dmask(location.href.split('#')[0]), 'UA: ' + navigator.userAgent, '뷰포트: ' + innerWidth + 'x' + innerHeight, '온라인: ' + navigator.onLine,
-    '음성인식: ' + ((window.SpeechRecognition || window.webkitSpeechRecognition) ? '지원' : '미지원'), '마이크 권한 API: ' + (navigator.mediaDevices ? '있음' : '없음(HTTPS 필요)')];
+    '음성인식: ' + ((window.SpeechRecognition || window.webkitSpeechRecognition) ? '지원' : '미지원'), '마이크 권한 API: ' + (navigator.mediaDevices ? '있음' : '없음(HTTPS 필요)'),
+    '녹음(MediaRecorder): ' + (recSupported() ? '지원' : '미지원') + ' / 녹음 사용: ' + (recOn() ? '켬' : '끔')];
   return '===== 진단 리포트 =====\n생성: ' + new Date().toLocaleString('ko-KR') + '\n' + env.join('\n') + '\n\n' +
     '--- 사용자 행동(최근 ' + CRUMBS.length + '개, 입력 값은 길이만) ---\n' + CRUMBS.map((c, i) => '  ' + (i + 1) + ') ' + c.at + ' ' + c.kind + ' ' + c.desc).join('\n') + '\n' +
     '--- 서버 호출 이력(최근 ' + CALLS.length + '건) ---\n' + CALLS.map((c, i) => '  ' + (i + 1) + ') ' + c.at + ' ' + c.name + ' ' + c.status + ' ' + c.ms + 'ms' + (c.runId ? ' runId ' + c.runId : '')).join('\n') + '\n\n' +
@@ -529,8 +609,26 @@ try { Voice.setGender(({'아빠':'male','아들':'male','엄마':'female','딸':
 const FOCUS = params.get('w') ? { key: params.get('w'), item: params.get('i') || 'word', go: params.get('go') === '1' } : null;
 const S = { data: null, user: params.get('u') || lsGet('hby_user') || '아빠', sector: '전체', q: '', cur: null, pron: null, ctl: null,
   mode: ['word', 'example', 'both'].indexOf(lsGet('hby_micmode')) !== -1 ? lsGet('hby_micmode') : 'both',
-  style: ['all', 'spoken', 'written'].indexOf(lsGet('hby_micstyle')) !== -1 ? lsGet('hby_micstyle') : 'all', item: 'word' };
+  style: ['all', 'spoken', 'written'].indexOf(lsGet('hby_micstyle')) !== -1 ? lsGet('hby_micstyle') : 'all', item: 'word',
+  aud: null, audioEl: null, playing: false, note: '', critOpen: false };
 if (FOCUS) { S.mode = 'both'; S.style = 'all'; S.item = FOCUS.item; }
+
+/* [1] 설정 화면 빨리 숨김: 앱에서 단어를 들고 열린 경우, 서버 응답을 기다리지 않고 바로 단어 화면만 보여줌 */
+function leaveFocus() { document.body.classList.remove('focus'); $('#focusBar').hidden = true; }
+if (FOCUS) {
+  document.body.classList.add('focus'); $('#focusBar').hidden = false;
+  $('#stage').innerHTML = '<p class="muted"><span class="spin"></span> 단어를 불러오는 중…</p>';
+}
+
+/* 단어 목록 캐시(이 기기에만 저장, 접근 토큰은 저장하지 않음) */
+const CACHE_KEY = 'hby_words_cache';
+function cacheLoad() {
+  try { const o = JSON.parse(lsGet(CACHE_KEY) || 'null'); if (o && o.api === API && o.data && Array.isArray(o.data.words)) return o.data; } catch (e) { /* noop */ }
+  return null;
+}
+function cacheSave(d) {
+  try { const s = JSON.stringify({ api: API, at: Date.now(), data: d }); if (s.length < 3000000) lsSet(CACHE_KEY, s); } catch (e) { /* noop */ }
+}
 
 function visible() {
   const c = S.data.commonOwner;
@@ -572,9 +670,43 @@ function curItem(w) {
   return its.find(x => x.id === S.item) || its[0] || null;
 }
 
+/* ---------- 녹음(내 발음 다시 듣기) ---------- */
+const REC_KEY = 'hby_norec';
+let TOK = 0;   // 점검 시도 번호: 다른 단어로 넘어간 뒤 늦게 도착한 결과·녹음을 무시하기 위함
+function recSupported() {
+  try { return !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && !Pron.support().isIOS; } catch (e) { return false; }
+}
+function recOn() { return recSupported() && lsGet(REC_KEY) !== '1'; }
+function stopMine() { if (S.audioEl) { try { S.audioEl.pause(); } catch (e) { /* noop */ } S.audioEl = null; } S.playing = false; }
+function freeAudio() {
+  stopMine();
+  if (S.aud && S.aud.url) { try { URL.revokeObjectURL(S.aud.url); } catch (e) { /* noop */ } }
+  S.aud = null;
+}
+function playMine() {
+  if (!S.aud || !S.aud.url) return;
+  if (S.playing) { stopMine(); stage(); return; }
+  try { Voice.stop(); } catch (e) { /* noop */ }
+  const a = new Audio(S.aud.url);
+  S.audioEl = a; S.playing = true;
+  const fin = () => { if (S.audioEl === a) { S.audioEl = null; S.playing = false; stage(); } };
+  a.onended = fin;
+  a.onerror = () => { if (S.aud) S.aud.err = '재생하지 못했어요. 다시 점검해 보세요.'; fin(); };
+  try {
+    const pr = a.play();
+    if (pr && pr.catch) pr.catch(() => { if (S.aud) S.aud.err = '재생하지 못했어요. 다시 점검해 보세요.'; fin(); });
+  } catch (e) { if (S.aud) S.aud.err = '재생하지 못했어요.'; fin(); return; }
+  stage();
+}
+
+/* ---------- 목록 / 화면 ---------- */
 async function load() {
-  $('#status').textContent = '단어를 불러오는 중…';
-  if (!API) { $('#apiBox').hidden = false; $('#status').textContent = '웹앱 주소를 먼저 입력해주세요.'; return; }
+  if (!API) { leaveFocus(); $('#apiBox').hidden = false; $('#status').textContent = '웹앱 주소를 먼저 입력해주세요.'; return; }
+  if (!S.data) {
+    const c = cacheLoad();
+    if (c) { S.data = c; fill(); applyFocus(); }   // 직전에 받은 목록으로 즉시 시작 → 뒤에서 새로 갱신
+  }
+  $('#status').textContent = S.data ? '' : '단어를 불러오는 중…';
   try {
     const t0 = Date.now();
     const res = await fetch(API + (API.indexOf('?') === -1 ? '?' : '&') + 'action=words' + (TOKEN ? '&t=' + encodeURIComponent(TOKEN) : ''));
@@ -583,26 +715,31 @@ async function load() {
     trace('words', Date.now() - t0, d.status === 'success' ? 'ok' : '오류 ' + (d.code || ''), d.runId);
     if (d.status !== 'success') { dlog(d.code || 'E005', 'load', d.message || '불러오기 실패', d.runId); throw new Error(d.message || '불러오기 실패'); }
     S.data = d;
+    cacheSave(d);
     $('#apiBox').hidden = true;
     $('#status').textContent = '';
+    if (S.cur) { const f = visible().find(x => keyOf(x) === keyOf(S.cur)); if (f) S.cur = f; }
     fill();
     applyFocus();
+    if (S.cur && !isActive()) stage();
   } catch (e) {
-    $('#apiBox').hidden = false;
     const m = String(e && e.message || e);
+    dlog('E001', 'load', m);
+    if (S.data) { $('#status').textContent = '서버에 연결하지 못해 저장된 단어로 진행 중이에요: ' + m; return; }
+    leaveFocus();
+    $('#apiBox').hidden = false;
     let tip;
     if (/Failed to fetch|NetworkError|Load failed/i.test(m)) tip = '서버에 연결하지 못했어요. ① 웹앱 배포의 "액세스 권한"이 <b>모든 사용자(익명)</b>인지(새 버전으로 다시 배포해야 반영돼요) ② 주소가 <b>/exec</b>로 끝나는지 확인해주세요. 앱의 [발음 점검 전용 페이지] 버튼으로 다시 열면 주소가 자동으로 채워져요.';
     else if (/토큰/.test(m)) tip = '접근 토큰이 맞지 않아요. 앱의 [발음 점검 전용 페이지] 버튼으로 다시 열어주세요.';
     else tip = '웹앱 주소가 /exec 인지, 배포가 최신 버전인지 확인해주세요.';
-    dlog('E001', 'load', m);
     $('#status').innerHTML = '불러오지 못했어요: ' + esc(m) + '<br>' + tip;
   }
 }
 let focusDone = false;
 function applyFocus() {
-  if (!FOCUS || focusDone) return; focusDone = true;
+  if (!FOCUS || focusDone || !S.data) return; focusDone = true;
   const w = visible().find(x => keyOf(x) === FOCUS.key);
-  if (!w) { $('#status').textContent = '선택한 단어를 찾지 못해 전체 목록을 보여드려요.'; return; }
+  if (!w) { leaveFocus(); $('#status').textContent = '선택한 단어를 찾지 못해 전체 목록을 보여드려요.'; return; }
   S.cur = w; document.body.classList.add('focus'); $('#focusBar').hidden = false;
   renderList(); stage();
   if (FOCUS.go) { try { start(); } catch (e) { dlog('E013', 'autoStart', e && e.message); } }
@@ -627,85 +764,237 @@ function filtered() {
   if (S.mode === 'example') ws = ws.filter(w => itemsOf(w).length);
   return ws;
 }
+/** 목록 한 줄: 점검 대상 언어 + 나머지 두 언어(베트남어·한국어·영어 모두 표시) */
+function othersText(w) {
+  const t = tgt();
+  return ['vi', 'ko', 'en'].filter(c => c !== t).map(c => w[c]).filter(x => x).join(' · ');
+}
 function renderList() {
+  if (!S.data) return;
   const ws = filtered().slice(0, 300);
   $('#list').innerHTML = ws.length ? ws.map(w => {
     const t = target(w);
-    return '<div class="item" aria-current="' + (!!S.cur && keyOf(S.cur) === keyOf(w)) + '"><button class="pick" data-k="' + esc(keyOf(w)) + '"><div class="t1">' + esc(first(t.text)) + '</div><div class="t2">' + esc(S.mode === 'example' ? ((itemsOf(w)[0] || {}).text || '') : t.mean) + '</div></button></div>';
+    return '<div class="item" aria-current="' + (!!S.cur && keyOf(S.cur) === keyOf(w)) + '"><button class="pick" data-k="' + esc(keyOf(w)) + '"><div class="t1">' + esc(first(t.text)) + '</div><div class="t2">' + esc(S.mode === 'example' ? ((itemsOf(w)[0] || {}).text || '') : othersText(w)) + '</div></button></div>';
   }).join('') : '<p class="muted">단어가 없어요.</p>';
 }
+
+/* ---------- 결과 화면 부품 ---------- */
+function isActive() { return !!(S.pron && ['requesting', 'listening', 'processing'].indexOf(S.pron.status) !== -1); }
+function grade(s) {
+  return s >= 80 ? { c: 'good', msg: '아주 좋아요!' } : (s >= 55 ? { c: 'mid', msg: '조금만 더 또렷하게!' } : { c: 'low', msg: '다시 한 번 천천히 해볼까요?' });
+}
+function hl(arr) { return arr.map(x => x.ok ? esc(x.c) : '<span class="x">' + (x.c === ' ' ? '␣' : esc(x.c)) + '</span>').join(''); }
+/** [5] 베트남어·한국어·영어 3줄. 점검 대상 언어는 크게 + 🎯 */
+function wordBlock(w, tl) {
+  const rows = [['vi', '베트남어', w.vi], ['ko', '한국어', w.ko], ['en', '영어', w.en]];
+  return '<div class="wtri">' + rows.map(r => '<div class="wrow' + (r[0] === tl ? ' on' : '') + '"><span class="lg">' + r[1] + '</span><span class="tx" lang="' + r[0] + '">' + (esc(r[2]) || '<span class="muted">—</span>') + '</span>' + (r[0] === tl ? '<span class="tg">🎯 점검 대상</span>' : '') + '</div>').join('') + '</div>';
+}
+function detailHtml(p) {
+  const d = p.detail;
+  if (!d) return '<p class="muted" style="margin:8px 0 0">직접 평가한 점수예요 (자동 채점이 아니에요).</p>';
+  const df = Pron.diff(d.target, d.heardNorm);
+  let why;
+  if (d.kind === 'vi') why = '성조 포함 일치율 ' + d.full + '% × 0.6 + 성조 제외 일치율 ' + d.bare + '% × 0.4 → <b>' + p.score + '점</b>';
+  else if (d.kind === 'ko') why = '띄어쓰기·부호를 뺀 글자 일치율 ' + d.full + '% → <b>' + p.score + '점</b>';
+  else why = '대소문자·부호를 뺀 글자 일치율 ' + d.full + '% → <b>' + p.score + '점</b>';
+  const alts = (p.alts || []).slice(0, 5);
+  return '<div class="cmp"><div><span class="k">목표</span><span class="v">' + hl(df.a) + '</span></div><div><span class="k">인식</span><span class="v">' + hl(df.b) + '</span></div></div>' +
+    '<p class="why">' + why + '</p>' +
+    '<p class="muted" style="margin:4px 0 0;text-align:left">빨간 글자 = 목표와 달라서 점수가 깎인 부분이에요 (목표에서 빠진 글자 / 인식에서 다르거나 더해진 글자). 글자 비교는 대소문자·부호를 뺀 상태로 해요.</p>' +
+    (alts.length > 1 ? '<p class="muted" style="margin:6px 0 0;text-align:left">브라우저가 들은 후보 ' + alts.length + '개 중 목표와 가장 비슷한 것으로 채점했어요: ' + alts.map(a => '“' + esc(a) + '”').join(' / ') + '</p>' : '');
+}
+function critHtml() {
+  return '<details class="crit" id="crit"' + (S.critOpen ? ' open' : '') + '><summary>채점 기준 보기</summary><div class="cb">' +
+    '<p><b>어떻게 채점하나요?</b> 브라우저(Chrome 등)의 음성 인식이 내 말을 글자로 바꾸면, 그 글자가 목표 글자와 얼마나 같은지(편집 거리 유사도)를 0~100점으로 계산해요.</p>' +
+    '<ul><li><b>베트남어</b>: 성조까지 같은지 60% + 성조를 뺀 글자가 같은지 40%</li><li><b>한국어</b>: 띄어쓰기·부호는 무시하고 글자 일치율</li><li><b>영어</b>: 대소문자·부호는 무시하고 글자 일치율</li><li>인식 후보를 최대 5개까지 받아 <b>가장 높은 점수</b>를 사용해요</li></ul>' +
+    '<table class="gtab"><tr><td class="good">80~100점</td><td>아주 좋아요</td></tr><tr><td class="mid">55~79점</td><td>조금만 더 또렷하게</td></tr><tr><td class="low">0~54점</td><td>다시 한 번 천천히</td></tr></table>' +
+    '<p class="muted"><b>알아두세요</b>: 억양·세기 같은 소리 자체를 분석하는 것이 아니라 “알아들은 글자”로 비교해요. 주변 소음이나 인식 오류로 점수가 달라질 수 있어요. 점수는 <b>단어</b> 점검일 때만 시트에 저장돼요(예문은 저장 안 함).</p></div></details>';
+}
+function audioHtml(p) {
+  if (!p.rec) return '';
+  const a = S.aud && S.aud.tok === p.tok ? S.aud : null;
+  if (!a) return '<p class="muted" style="margin:8px 0">내 발음 녹음 처리 중…</p>';
+  if (!a.url) return '<p class="muted" style="margin:8px 0">' + esc(a.msg || '이 기기에서는 녹음을 만들지 못했어요. 점수는 정상이에요.') + '</p>';
+  return '<div class="row" style="justify-content:center;margin:10px 0 4px"><button class="btn' + (S.playing ? ' playing' : '') + '" id="mine">' + (S.playing ? IC_STOP + ' 멈추기' : IC_SPK + ' 내 발음 듣기') + '</button></div>' +
+    (a.err ? '<p class="muted" style="color:var(--bad);margin:0">' + esc(a.err) + '</p>' : '');
+}
+function navHtml() {
+  const ls = filtered();
+  const i = S.cur ? ls.findIndex(x => keyOf(x) === keyOf(S.cur)) : -1;
+  return '<div class="navbar"><button class="btn" id="prev">← 이전</button><span class="muted" aria-live="polite">' + (i >= 0 ? (i + 1) + ' / ' + ls.length : ls.length + '개') + '</span><button class="btn primary" id="next">다음 →</button></div>';
+}
+
 function stage() {
   const w = S.cur; if (!w) return;
-  const its = itemsOf(w), t = curItem(w), p = S.pron;
-  if (!t) { $('#stage').innerHTML = '<p class="muted">이 단어는 선택한 문체의 예문이 아직 없어요. 연습 대상을 바꿔보세요.</p>'; return; }
+  const its = itemsOf(w), t = curItem(w), p = S.pron, tl = tgt();
+  if (!t) {
+    $('#stage').innerHTML = '<p class="muted">이 단어는 선택한 문체의 예문이 아직 없어요. 연습 대상을 바꿔보세요.</p>' + navHtml();
+    bindNav(); return;
+  }
   const txt = t.kind === 'word' ? first(t.text) : t.text;
   let h = '';
   if (its.length > 1) h += '<div class="row" style="justify-content:center;margin-bottom:10px" role="group" aria-label="연습 항목">' + its.map(x => '<button class="btn' + (x.id === t.id ? ' primary' : '') + '" data-item="' + x.id + '" aria-pressed="' + (x.id === t.id) + '">' + esc(x.label) + '</button>').join('') + '</div>';
   else h += '<p class="muted" style="margin:0 0 6px">' + esc(t.label) + '</p>';
-  h += '<div class="target' + (t.kind === 'ex' ? ' sm' : '') + '" lang="' + t.lang.slice(0, 2) + '">' + esc(txt) + '</div><p class="muted">' + esc(t.mean) + '</p>';
-  h += '<div class="row" style="justify-content:center;margin:12px 0"><button class="btn icon" id="spk" aria-label="듣기">' + IC_SPK + '</button>';
+  if (t.kind === 'word') {
+    h += wordBlock(w, tl);
+    if (txt !== t.text) h += '<p class="muted" style="margin:6px 0 0">🎤 점검할 말: <b>' + esc(txt) + '</b></p>';
+  } else {
+    h += '<div class="target sm" lang="' + t.lang.slice(0, 2) + '">' + esc(txt) + '</div><p class="muted">' + esc(t.mean) + '</p>' +
+      '<p class="muted" style="margin:8px 0 0">단어 · 베트남어 ' + esc(w.vi || '—') + ' / 한국어 ' + esc(w.ko || '—') + ' / 영어 ' + esc(w.en || '—') + '</p>';
+  }
+  h += '<div class="row" style="justify-content:center;margin:14px 0 8px"><button class="btn icon" id="spk" aria-label="원어 발음 듣기" title="원어 발음 듣기">' + IC_SPK + '</button>';
   if (p && (p.status === 'listening' || p.status === 'requesting')) h += '<button class="btn rec pulse" id="stopMic">' + IC_STOP + ' ' + (p.status === 'requesting' ? '마이크 준비 중…' : '듣는 중… 눌러서 끝내기') + '</button>';
   else h += '<button class="btn primary" id="mic">' + IC_MIC + ' 발음 점검</button>';
   h += '</div>';
+  if (recSupported()) h += '<label class="rectog"><input type="checkbox" id="recTog"' + (recOn() ? ' checked' : '') + '> 내 발음 녹음해서 다시 듣기</label>';
+  else h += '<p class="muted rectog">이 기기에서는 내 발음 다시 듣기를 지원하지 않아요.</p>';
+  if (S.note) h += '<p class="muted" style="margin:0 0 8px">' + esc(S.note) + '</p>';
   if (p && p.status === 'processing') h += '<p><span class="spin"></span> 채점 중…</p>';
   if (p && p.status === 'done') {
-    const c = p.score >= 80 ? 'good' : p.score >= 55 ? 'mid' : 'low';
-    const sv = t.kind !== 'word' ? '예문 점수는 시트에 저장하지 않아요' : (p.saved === true ? '시트에 저장했어요' : p.saved === false ? '시트 저장에 실패했어요: ' + esc(p.saveErr || '') : '저장 중…');
-    h += '<div class="big ' + c + '">' + p.score + '</div><p>인식된 말: “' + esc(p.heard) + '”</p><p class="muted">' + sv + '</p>';
+    const g = grade(p.score);
+    const sv = p.kind !== 'word' ? '예문 점수는 시트에 저장하지 않아요' : (p.saved === true ? '시트에 저장했어요' : p.saved === false ? '시트 저장에 실패했어요: ' + esc(p.saveErr || '') : '저장 중…');
+    h += '<div class="res"><div class="big ' + g.c + '">' + p.score + '<small>점</small></div><p style="margin:0 0 6px"><b>' + g.msg + '</b></p><p class="muted" style="margin:0">인식된 말: “' + esc(p.heard) + '”</p>' +
+      audioHtml(p) + detailHtml(p) + '<p class="muted" style="margin:8px 0 0">' + sv + '</p></div>';
   }
   if (p && p.status === 'error') {
     const i = p.info;
     h += '<div class="err"><p><b>' + esc(i.title) + '</b> <span class="muted">(' + esc(i.code) + ')</span></p><p>' + esc(i.tip) + '</p>' + (i.detail ? '<p class="muted">' + esc(i.detail) + '</p>' : '') + '</div>';
+    if (p.rec && i.key === 'no-speech') h += '<div class="row" style="justify-content:center;margin-top:10px"><button class="btn" id="norec">녹음 끄고 다시 시도</button></div><p class="muted">일부 기기는 녹음 때문에 음성 인식이 안 될 수 있어요.</p>';
     if (i.fallback) h += '<div class="row" style="justify-content:center;margin-top:10px"><span class="muted">직접 평가:</span><button class="btn" data-self="90">잘했어요</button><button class="btn" data-self="65">보통</button><button class="btn" data-self="35">다시</button></div>';
   }
+  h += critHtml() + navHtml();
   $('#stage').innerHTML = h;
-  const spk = $('#spk'); if (spk) spk.onclick = () => Voice.speak(txt, { id: 'w', lang: t.lang, repeat: 1, rate: (t.lang.indexOf('vi') === 0 ? 0.6 : (t.lang.indexOf('ko') === 0 ? 0.8 : 0.7)), kind: t.kind === 'ex' ? 'sentence' : 'word' });
+  bindStage(w, t, txt);
+}
+function bindNav() {
+  const pv = $('#prev'), nx = $('#next');
+  if (pv) pv.onclick = () => go(-1);
+  if (nx) nx.onclick = () => go(1);
+}
+function bindStage(w, t, txt) {
+  const spk = $('#spk'); if (spk) spk.onclick = () => { stopMine(); Voice.speak(txt, { id: 'w', lang: t.lang, repeat: 1, rate: (t.lang.indexOf('vi') === 0 ? 0.6 : (t.lang.indexOf('ko') === 0 ? 0.8 : 0.7)), kind: t.kind === 'ex' ? 'sentence' : 'word' }); };
   const mic = $('#mic'); if (mic) mic.onclick = start;
   const st = $('#stopMic'); if (st) st.onclick = () => { if (S.ctl) S.ctl.stop(); };
-  document.querySelectorAll('[data-item]').forEach(b => { b.onclick = () => { if (S.ctl) { try { S.ctl.abort(); } catch (e) { /* 무시 */ } } S.item = b.getAttribute('data-item'); S.pron = null; stage(); }; });
-  document.querySelectorAll('[data-self]').forEach(b => { b.onclick = () => { S.pron = { status: 'done', score: Number(b.getAttribute('data-self')), heard: '(직접 평가)' }; if (t.kind === 'word') save(S.cur, S.pron.score); stage(); }; });
+  const mine = $('#mine'); if (mine) mine.onclick = playMine;
+  const rt = $('#recTog'); if (rt) rt.onchange = () => { lsSet(REC_KEY, rt.checked ? '' : '1'); S.note = ''; };
+  const nr = $('#norec'); if (nr) nr.onclick = () => { lsSet(REC_KEY, '1'); S.note = '녹음을 껐어요. 이제 인식만 사용해요.'; start(); };
+  const cr = $('#crit'); if (cr) cr.addEventListener('toggle', () => { S.critOpen = cr.open; });
+  document.querySelectorAll('[data-item]').forEach(b => { b.onclick = () => { resetPron(); S.item = b.getAttribute('data-item'); stage(); }; });
+  document.querySelectorAll('[data-self]').forEach(b => { b.onclick = () => {
+    const score = Number(b.getAttribute('data-self'));
+    const tok = ++TOK;
+    resetPron(false);
+    S.pron = { status: 'done', tok: tok, rec: false, score: score, heard: '(직접 평가)', alts: [], detail: null, kind: t.kind };
+    if (t.kind === 'word') save(S.cur, score, tok);
+    stage();
+  }; });
+  bindNav();
 }
-async function save(w, score) {
+async function save(w, score, tok) {
   const prev = (w.scoresByUser[S.user] || []).filter(x => x !== '' && x !== null);
   const scores = [score].concat(prev).slice(0, 3);
   w.scoresByUser[S.user] = scores;
+  const mine = () => (S.pron && S.pron.tok === tok) ? S.pron : null;
   try {
     const t0 = Date.now();
     const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'pronounce_history', user: S.user, row: w.row, key: keyOf(w), scores: scores, t: TOKEN || undefined }) });
     const o = await r.json();
     trace('pronounce_history', Date.now() - t0, o.status === 'success' ? 'ok' : '오류 ' + (o.code || ''), o.runId);
     if (o.status !== 'success') { dlog(o.code || 'E005', 'save', o.message || '저장 실패', o.runId); throw new Error(o.message || '저장 실패'); }
-    if (S.pron) S.pron.saved = true;
-  } catch (e) { dlog('E005', 'save', e && e.message); if (S.pron) { S.pron.saved = false; S.pron.saveErr = e.message; } }
+    const m = mine(); if (m) m.saved = true;
+  } catch (e) { dlog('E005', 'save', e && e.message); const m = mine(); if (m) { m.saved = false; m.saveErr = e.message; } }
   stage();
+}
+
+/* ---------- 점검 시작 ---------- */
+function abortCtl() { if (S.ctl) { try { S.ctl.abort(); } catch (e) { /* 무시 */ } S.ctl = null; } }
+/** 진행 중인 점검·녹음·재생을 모두 정리(단어/항목을 바꿀 때) */
+function resetPron(clearPron) {
+  abortCtl(); TOK++; freeAudio(); S.note = '';
+  try { Voice.stop(); } catch (e) { /* noop */ }
+  if (clearPron !== false) S.pron = null;
 }
 function start() {
   const w = S.cur; if (!w) return;
   const t = curItem(w); if (!t) return;
   const txt = t.kind === 'word' ? first(t.text) : t.text;
-  if (S.ctl) { try { S.ctl.abort(); } catch (e) { /* 무시 */ } }
-  S.pron = { status: 'requesting' }; stage();
-  S.ctl = Pron.start({
-    text: txt, lang: t.lang, timeoutMs: t.kind === 'ex' ? 14000 : 8000,
-    onState: s => { if (S.pron) { S.pron.status = s; stage(); } },
-    onDone: r => { S.pron = { status: 'done', score: r.score, heard: r.heard }; stage(); if (t.kind === 'word') save(w, r.score); },
-    onFail: i => { S.pron = { status: 'error', info: i }; stage(); }
-  });
+  abortCtl(); freeAudio(); S.note = '';
+  const tok = ++TOK;
+  const useRec = recOn();
+  S.pron = { status: 'requesting', tok: tok, rec: useRec };
+  stage();
+  const run = rec => {
+    S.ctl = Pron.start({
+      text: txt, lang: t.lang, record: rec, timeoutMs: t.kind === 'ex' ? 14000 : 8000,
+      onState: s => { if (tok !== TOK) return; if (S.pron) { S.pron.status = s; stage(); } },
+      onAudio: blob => {
+        if (tok !== TOK) return;
+        S.aud = blob ? { tok: tok, url: URL.createObjectURL(blob) } : { tok: tok, url: '', msg: '이 기기에서는 녹음을 만들지 못했어요. 점수는 정상이에요.' };
+        if (S.pron && S.pron.status === 'done') stage();
+      },
+      onDone: r => {
+        if (tok !== TOK) return;
+        S.ctl = null;
+        S.pron = { status: 'done', tok: tok, rec: rec, score: r.score, heard: r.heard, alts: r.alts, detail: r.detail, kind: t.kind };
+        stage();
+        if (rec) setTimeout(() => { if (tok === TOK && !(S.aud && S.aud.tok === tok)) { S.aud = { tok: tok, url: '', msg: '녹음이 만들어지지 않았어요. 점수는 정상이에요.' }; stage(); } }, 4000);
+        if (t.kind === 'word') save(w, r.score, tok);
+      },
+      onFail: i => {
+        if (tok !== TOK) return;
+        S.ctl = null;
+        if (rec && (i.key === 'audio-capture' || i.key === 'start-timeout')) {
+          // 녹음과 음성 인식을 함께 못 쓰는 기기: 녹음을 끄고 인식만 다시 시도
+          lsSet(REC_KEY, '1');
+          S.note = '이 기기는 녹음과 음성 인식을 함께 쓸 수 없어 “내 발음 다시 듣기”를 껐어요. 인식·채점은 그대로 쓸 수 있어요.';
+          dlog('E014', '녹음', '녹음+인식 동시 사용 실패(' + i.key + ') → 녹음 끄고 재시도');
+          S.pron = { status: 'requesting', tok: tok, rec: false };
+          stage(); run(false); return;
+        }
+        S.pron = { status: 'error', tok: tok, rec: rec, info: i };
+        dlog(i.code, '발음 점검', i.title + (i.detail ? ' / ' + i.detail : ''));
+        stage();
+      }
+    });
+  };
+  run(useRec);
 }
+
+/* ---------- 이전 / 다음 ---------- */
+function select(w) {
+  resetPron();
+  S.cur = w;
+  renderList(); stage();
+  if (document.body.classList.contains('focus')) window.scrollTo({ top: 0 });
+}
+function go(d) {
+  if (!S.data) return;
+  const ls = filtered(); if (!ls.length) return;
+  let i = S.cur ? ls.findIndex(x => keyOf(x) === keyOf(S.cur)) : -1;
+  i = i < 0 ? (d > 0 ? 0 : ls.length - 1) : (i + d + ls.length) % ls.length;
+  select(ls[i]);   // 마이크는 자동으로 켜지 않음 — 🎤 를 직접 누름
+}
+
 $('#list').addEventListener('click', ev => {
   const b = ev.target.closest('.pick'); if (!b) return;
   const k = b.getAttribute('data-k');
-  S.cur = visible().find(w => keyOf(w) === k) || null; S.pron = null; S.item = S.mode === 'example' ? '' : 'word';
-  if (S.ctl) { try { S.ctl.abort(); } catch (e) { /* 무시 */ } }
-  renderList(); stage();
+  const w = visible().find(x => keyOf(x) === k); if (!w) return;
+  S.item = S.mode === 'example' ? '' : 'word';
+  select(w);
 });
-$('#user').addEventListener('change', e => { S.user = e.target.value; lsSet('hby_user', S.user); S.cur = null; S.pron = null; S.sector = '전체'; fill(); $('#stage').innerHTML = '<p class="muted">왼쪽에서 단어를 고르세요.</p>'; });
-$('#lang').addEventListener('change', e => { lsSet('hby_tgt_' + S.user, e.target.value); S.cur = null; S.pron = null; renderList(); $('#stage').innerHTML = '<p class="muted">왼쪽에서 단어를 고르세요.</p>'; });
-$('#mode').addEventListener('change', e => { S.mode = e.target.value; lsSet('hby_micmode', S.mode); S.item = S.mode === 'example' ? '' : 'word'; S.pron = null; $('#styleWrap').hidden = S.mode === 'word'; renderList(); if (S.cur) stage(); });
-$('#style').addEventListener('change', e => { S.style = e.target.value; lsSet('hby_micstyle', S.style); S.item = S.mode === 'example' ? '' : 'word'; S.pron = null; renderList(); if (S.cur) stage(); });
-$('#sector').addEventListener('change', e => { S.sector = e.target.value; renderList(); });
-$('#q').addEventListener('input', e => { S.q = e.target.value; renderList(); });
+$('#user').addEventListener('change', e => { S.user = e.target.value; lsSet('hby_user', S.user); resetPron(); S.cur = null; S.sector = '전체'; fill(); $('#stage').innerHTML = '<p class="muted">왼쪽에서 단어를 고르세요.</p>'; });
+$('#lang').addEventListener('change', e => { lsSet('hby_tgt_' + S.user, e.target.value); resetPron(); S.cur = null; renderList(); $('#stage').innerHTML = '<p class="muted">왼쪽에서 단어를 고르세요.</p>'; });
+$('#mode').addEventListener('change', e => { S.mode = e.target.value; lsSet('hby_micmode', S.mode); S.item = S.mode === 'example' ? '' : 'word'; resetPron(); $('#styleWrap').hidden = S.mode === 'word'; renderList(); if (S.cur) stage(); });
+$('#style').addEventListener('change', e => { S.style = e.target.value; lsSet('hby_micstyle', S.style); S.item = S.mode === 'example' ? '' : 'word'; resetPron(); renderList(); if (S.cur) stage(); });
+$('#sector').addEventListener('change', e => { S.sector = e.target.value; renderList(); if (S.cur) stage(); });
+$('#q').addEventListener('input', e => { S.q = e.target.value; renderList(); if (S.cur && !isActive()) stage(); });
 $('#reload').addEventListener('click', load);
+document.addEventListener('keydown', ev => {
+  const tg = (ev.target.tagName || '').toLowerCase();
+  if (tg === 'input' || tg === 'textarea' || tg === 'select' || !S.cur) return;
+  if (ev.key === 'ArrowRight') go(1);
+  else if (ev.key === 'ArrowLeft') go(-1);
+});
 $('#dgOut').textContent = dtext();
 $('#dgCopy').addEventListener('click', async () => {
   const t = dtext();
@@ -723,7 +1012,7 @@ $('#dgDl').addEventListener('click', () => {
 $('#dgClr').addEventListener('click', () => { DLOG.length = 0; $('#dgN').textContent = ''; $('#dgOut').textContent = dtext(); });
 $('#apiSave').addEventListener('click', () => { API = $('#api').value.trim() || API; const tk = $('#tok').value.trim(); if (tk) { TOKEN = tk; lsSet('hby_mk', TOKEN); } lsSet('hby_api', API); load(); });
 $('#api').value = API || '';
-$('#fbAll').addEventListener('click', () => { document.body.classList.remove('focus'); $('#focusBar').hidden = true; });
+$('#fbAll').addEventListener('click', () => { leaveFocus(); });
 $('#fbClose').addEventListener('click', () => { try { window.close(); } catch (e) { /* noop */ } $('#status').textContent = '창이 닫히지 않으면 브라우저에서 이 탭을 직접 닫아주세요.'; });
 load();
 })();
