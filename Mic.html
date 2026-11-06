@@ -1,4 +1,15 @@
 <!--
+버전: 2026-11-05,1500
+변경사유: [v5.5 Phase B-2 수정, 안C] 발음 점검 마이크 개선 3건 + 설정 연동.
+  1) [자동 종료·즉시 채점] 말이 끝났다고 감지되거나 최종 인식 결과가 오면 마이크를 바로 끄고 곧바로 채점(누르지 않아도 됨). 중간 결과가 멈추면 '무음 대기 시간' 뒤 종료.
+  2) [짧은 단어 누락 보완] ① 최종 결과가 없어도 중간 인식 결과가 있으면 채점에 사용 ② 소리를 못 잡으면 1회 자동 재시도(녹음은 유지, 화면에 '다시 듣는 중') ③ '듣는 중' 표시는 마이크가 실제로 소리를 받기 시작한 뒤에만 표시 ④ 말 시작 전 대기 5초.
+  3) [무음 대기 시간 설정] 앱 [설정] 탭의 값(sl, 700~4000ms)을 주소로 받아 이 기기에 기억(hby_sil). 기본 1200ms.
+  공용 모듈(Pron) 변경은 Index.html 과 같은 내용입니다. 서버 파일(Code·Diag·00_RUN)은 변경 없음 → APP_VERSION 은 2026-10-29,1800 유지.
+[실행 안내] 편집기 실행: 불필요 (GitHub Pages 의 Mic 저장소에 index.html 로 올리는 정적 페이지 — 파일 이름은 index.html 로 바꿔서 덮어쓰기).
+[이전 버전] 2026-10-31,1100 / 2026-10-31,1000 / 2026-10-29,1800 이하 — 이전 변경 이력은 GitHub 커밋 기록 참조(설정 화면 빨리 숨김, 내 발음 다시 듣기, 채점 기준 표시, 이전·다음, 3개 언어 표시, 진단 강화 등).
+-->
+<!--
+(이전 상세 이력 보관)
 버전: 2026-10-31,1100
 변경사유: [v5.5 Phase B-2 수정] 발음 점검 전용 페이지 개선 5건(안C 선택).
   1) [설정 화면 빨리 숨김] 앱의 🎤 버튼으로 열린 경우(주소에 w 포함) 페이지가 열리자마자 설정·목록을 숨기고 단어 화면만 표시.
@@ -496,41 +507,73 @@ const Pron = (function () {
         await sleep(220);
         if (ctl.stopped) { relStream(); return; }
       }
-      let rec;
-      try { rec = new SR(); } catch (e) { relStream(); o.onFail(info('unsupported', { detail: String(e) })); return; }
-      ctl.rec = rec;
-      rec.lang = o.lang || 'ko-KR';
-      rec.interimResults = true;
-      rec.maxAlternatives = 5;
-      rec.continuous = false;
-      let finalAlts = [], interim = '', err = null, started = false, finished = false, timer = null, startTimer = null;
-      const done = function (fn) { if (finished) return; finished = true; clearTimeout(timer); clearTimeout(startTimer); stopRec(); if (!ctl.stopped) fn(); };
-      startTimer = setTimeout(function () {
-        done(function () { try { rec.abort(); } catch (e) { /* noop */ } o.onFail(info('start-timeout')); });
-      }, 8000);
-      rec.onstart = function () {
-        started = true; clearTimeout(startTimer);
-        o.onState('listening');
-        timer = setTimeout(function () { try { rec.stop(); } catch (e) { /* noop */ } }, o.timeoutMs || 9000);
-      };
-      rec.onresult = function (ev) {
-        for (let i = ev.resultIndex; i < ev.results.length; i++) {
-          const r = ev.results[i];
-          if (r.isFinal) { finalAlts = []; for (let k = 0; k < r.length; k++) finalAlts.push(r[k].transcript); }
-          else if (r[0]) interim = r[0].transcript;
-        }
-      };
-      rec.onerror = function (ev) { err = (ev && ev.error) || 'unknown'; };
-      rec.onend = function () {
-        done(function () {
+      // ---- v2026-11-05: 말이 끝나면 자동 종료 + 즉시 채점, 짧은 단어 누락 보완(무음 대기 조절 · 1회 자동 재시도) ----
+      const silMs = Math.max(700, Math.min(4000, Number(o.silenceMs) || 1200));
+      const maxMs = o.timeoutMs || 9000;
+      let finalAlts = [], interim = '', err = null, finished = false, attempt = 0, maxTimer = null, startTimer = null;
+      let cur = null, curDead = false;
+      const clr = function (t) { if (t) clearTimeout(t); return null; };
+      const done = function (fn) { if (finished) return; finished = true; maxTimer = clr(maxTimer); startTimer = clr(startTimer); stopRec(); if (!ctl.stopped) fn(); };
+      function launch() {
+        attempt++;
+        let rec;
+        try { rec = new SR(); } catch (e) { done(function () { relStream(); o.onFail(info('unsupported', { detail: String(e) })); }); return; }
+        cur = rec; ctl.rec = rec; curDead = false;
+        rec.lang = o.lang || 'ko-KR';
+        rec.interimResults = true;
+        rec.maxAlternatives = 5;
+        rec.continuous = false;
+        let started = false, heardAudio = false, spoke = false, silT = null, noSpT = null;
+        finalAlts = []; interim = ''; err = null;
+        const stopNow = function () { try { rec.stop(); } catch (e) { /* noop */ } };
+        const armSilence = function (ms) { silT = clr(silT); silT = setTimeout(stopNow, ms); };
+        startTimer = clr(startTimer);
+        startTimer = setTimeout(function () {
+          if (started || finished) return;
+          done(function () { try { rec.abort(); } catch (e) { /* noop */ } o.onFail(info('start-timeout')); });
+        }, 8000);
+        rec.onstart = function () { started = true; startTimer = clr(startTimer); };
+        rec.onaudiostart = function () {
+          heardAudio = true; o.onState('listening');
+          if (!maxTimer) maxTimer = setTimeout(stopNow, maxMs);
+          // 말이 전혀 시작되지 않으면 5초 뒤 종료 → 아래 onend 에서 1회 자동 재시도
+          noSpT = clr(noSpT); noSpT = setTimeout(function () { if (!spoke) stopNow(); }, 5000);
+        };
+        rec.onspeechstart = function () { spoke = true; noSpT = clr(noSpT); };
+        rec.onspeechend = function () { armSilence(Math.min(silMs, 700)); };   // 말이 끝났다고 감지되면 곧 종료
+        rec.onresult = function (ev) {
+          spoke = true; noSpT = clr(noSpT);
+          let sawFinal = false;
+          for (let i = ev.resultIndex; i < ev.results.length; i++) {
+            const r = ev.results[i];
+            if (r.isFinal) { finalAlts = []; for (let k = 0; k < r.length; k++) finalAlts.push(r[k].transcript); sawFinal = true; }
+            else if (r[0]) interim = r[0].transcript;
+          }
+          if (sawFinal) { silT = clr(silT); stopNow(); }          // 최종 결과가 오면 즉시 마이크 종료 → 바로 채점
+          else armSilence(silMs);                                    // 중간 결과가 계속 오는 동안은 기다리고, 멈추면 silMs 뒤 종료
+        };
+        rec.onerror = function (ev) { err = (ev && ev.error) || 'unknown'; };
+        rec.onend = function () {
+          silT = clr(silT); noSpT = clr(noSpT);
+          if (finished || rec !== cur) return;
           const alts = finalAlts.length ? finalAlts : (interim ? [interim] : []);
-          if (alts.length) { o.onState('processing'); o.onDone(score(o.text, alts, o.lang)); return; }
-          if (err && err !== 'no-speech' && err !== 'aborted') { o.onFail(info(err)); return; }
-          o.onFail(info(started ? 'no-speech' : 'start-timeout'));
-        });
-      };
-      try { rec.start(); }
-      catch (e) { done(function () { o.onFail(info(e && e.name === 'InvalidStateError' ? 'busy' : 'unknown', { detail: String(e) })); }); }
+          if (alts.length) { done(function () { o.onState('processing'); o.onDone(score(o.text, alts, o.lang)); }); return; }
+          const soft = !err || err === 'no-speech' || err === 'aborted';
+          if (soft && attempt < 2 && !ctl.stopped) {              // 소리를 못 잡은 경우: 한 번만 자동 재시도(녹음은 유지)
+            o.onState('retrying');
+            setTimeout(function () { if (!finished && !ctl.stopped) launch(); }, 250);
+            return;
+          }
+          done(function () {
+            if (err && err !== 'no-speech' && err !== 'aborted') { o.onFail(info(err)); return; }
+            o.onFail(info(heardAudio || started ? 'no-speech' : 'start-timeout'));
+          });
+        };
+        try { rec.start(); }
+        catch (e) { done(function () { o.onFail(info(e && e.name === 'InvalidStateError' ? 'busy' : 'unknown', { detail: String(e) })); }); }
+      }
+      ctl.stop = function () { try { if (cur) cur.stop(); } catch (e) { /* noop */ } };
+      launch();
     })();
     return ctl;
   }
@@ -600,6 +643,7 @@ if (params.get('k')) {
 if (params.get('u')) lsSet('hby_user', params.get('u'));
 if (params.get('t')) lsSet('hby_tgt_' + (params.get('u') || lsGet('hby_user')), params.get('t'));
 if (params.get('m')) lsSet('hby_micmode', params.get('m'));
+if (params.get('sl')) { const slv = Number(params.get('sl')); if (isFinite(slv)) lsSet('hby_sil', String(Math.max(700, Math.min(4000, Math.round(slv))))); }
 if (params.get('s')) lsSet('hby_micstyle', params.get('s').split(',').length === 1 ? params.get('s') : 'all');
 const IC_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 const IC_SPK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
@@ -779,7 +823,7 @@ function renderList() {
 }
 
 /* ---------- 결과 화면 부품 ---------- */
-function isActive() { return !!(S.pron && ['requesting', 'listening', 'processing'].indexOf(S.pron.status) !== -1); }
+function isActive() { return !!(S.pron && ['requesting', 'listening', 'retrying', 'processing'].indexOf(S.pron.status) !== -1); }
 function grade(s) {
   return s >= 80 ? { c: 'good', msg: '아주 좋아요!' } : (s >= 55 ? { c: 'mid', msg: '조금만 더 또렷하게!' } : { c: 'low', msg: '다시 한 번 천천히 해볼까요?' });
 }
@@ -843,7 +887,7 @@ function stage() {
       '<p class="muted" style="margin:8px 0 0">단어 · 베트남어 ' + esc(w.vi || '—') + ' / 한국어 ' + esc(w.ko || '—') + ' / 영어 ' + esc(w.en || '—') + '</p>';
   }
   h += '<div class="row" style="justify-content:center;margin:14px 0 8px"><button class="btn icon" id="spk" aria-label="원어 발음 듣기" title="원어 발음 듣기">' + IC_SPK + '</button>';
-  if (p && (p.status === 'listening' || p.status === 'requesting')) h += '<button class="btn rec pulse" id="stopMic">' + IC_STOP + ' ' + (p.status === 'requesting' ? '마이크 준비 중…' : '듣는 중… 눌러서 끝내기') + '</button>';
+  if (p && (p.status === 'listening' || p.status === 'requesting' || p.status === 'retrying')) h += '<button class="btn rec pulse" id="stopMic">' + IC_STOP + ' ' + (p.status === 'requesting' ? '마이크 준비 중…' : p.status === 'retrying' ? '다시 듣는 중… 말씀해 주세요' : '듣는 중… 말이 끝나면 자동 채점') + '</button>';
   else h += '<button class="btn primary" id="mic">' + IC_MIC + ' 발음 점검</button>';
   h += '</div>';
   if (recSupported()) h += '<label class="rectog"><input type="checkbox" id="recTog"' + (recOn() ? ' checked' : '') + '> 내 발음 녹음해서 다시 듣기</label>';
@@ -925,7 +969,7 @@ function start() {
   stage();
   const run = rec => {
     S.ctl = Pron.start({
-      text: txt, lang: t.lang, record: rec, timeoutMs: t.kind === 'ex' ? 14000 : 8000,
+      text: txt, lang: t.lang, record: rec, silenceMs: Number(lsGet('hby_sil')) || 1200, timeoutMs: t.kind === 'ex' ? 14000 : 8000,
       onState: s => { if (tok !== TOK) return; if (S.pron) { S.pron.status = s; stage(); } },
       onAudio: blob => {
         if (tok !== TOK) return;
